@@ -1,3 +1,4 @@
+
 import tkinter as tk
 from PIL import Image, ImageTk
 import cv2
@@ -114,6 +115,17 @@ def on_motion(event):
             drag_data['shake_distance'] += dist
         drag_data['last_mouse'] = current_mouse
 
+
+import csv
+import os
+
+# Create CSV file and write header if it doesn't exist
+CSV_PATH = "drag_metrics.csv"
+if not os.path.exists(CSV_PATH):
+    with open(CSV_PATH, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Displacement", "Shake", "Shake Ratio"])
+
 def on_release(event):
     if drag_data['tile_id']:
         tile_id = drag_data['tile_id']
@@ -141,7 +153,13 @@ def on_release(event):
         displacement = (dx ** 2 + dy ** 2) ** 0.5
         shake = drag_data['shake_distance']
         shake_ratio = shake / displacement if displacement != 0 else 0
+
         print(f"[Tile Drag] Displacement: {displacement:.2f}px | Shake: {shake:.2f}px | Shake Ratio: {shake_ratio:.2f}")
+
+        # Append data to CSV
+        with open(CSV_PATH, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([f"{displacement:.2f}", f"{shake:.2f}", f"{shake_ratio:.2f}"])
 
         drag_data['tile_id'] = None
         drag_data['last_mouse'] = None
