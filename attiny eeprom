@@ -1,0 +1,73 @@
+#include <EEPROM.h>
+#include <math.h>
+
+const int FSR1_PIN = 2; // A2 = PB4 = Pin 3
+const int FSR2_PIN = 1; // A1 = PB2 = Pin 7
+const int OUT_PIN = 0;  // PB0 = Pin 5
+const int EEPROM_ADDR = 0;
+
+const float BASELINE_1 = 0.0, MAX_SIGNAL_1 = 510;
+const float BASELINE_2 = 0.0, MAX_SIGNAL_2 = 516;
+const int NUM_SAMPLES = 10;
+const int MAX_ADC = 1023;
+
+void setup() {
+  pinMode(OUT_PIN, OUTPUT);
+
+  // Write a default value if EEPROM is uninitialized
+  if (EEPROM.read(EEPROM_ADDR) == 255) {
+    EEPROM.write(EEPROM_ADDR, 0);  // Initialize EEPROM
+  }
+}
+
+void loop() {
+  float raw1, raw2;
+
+  float norm1 = getNormalizedForce(FSR1_PIN, BASELINE_1, MAX_SIGNAL_1, raw1);
+  float norm2 = getNormalizedForce(FSR2_PIN, BASELINE_2, MAX_SIGNAL_2, raw2);
+  float avgNorm = (norm1 + norm2) / 2.0;
+
+  byte gripClass;
+
+  // Simple threshold-based grip classifier
+  if (avgNorm < 0.33)
+    gripClass = 0;
+  else if (avgNorm < 0.66)
+    gripClass = 1;
+  else
+    gripClass = 2;
+
+  EEPROM.write(EEPROM_ADDR, gripClass);  // Always write for debug
+
+  byte val = EEPROM.read(EEPROM_ADDR);
+
+  // Output corresponding voltage for multimeter
+  if (val == 0)
+    analogWrite(OUT_PIN, 0);       // ~0V
+  else if (val == 1)
+    analogWrite(OUT_PIN, 127);     // ~2.5V
+  else if (val == 2)
+    analogWrite(OUT_PIN, 255);     // ~5V
+
+  delay(5);  // Adjust as needed
+}
+
+float getNormalizedForce(int pin, float baseline, float maxSignal, float& outRawSignal) {
+  long sum = 0;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    sum += analogRead(pin);
+  }
+
+  float avg = sum / float(NUM_SAMPLES);
+  float inverted = MAX_ADC - avg;
+  float signal = inverted - baseline;
+
+  if (signal < 0) signal = 0;
+
+  outRawSignal = signal;
+
+  float norm = signal / maxSignal;
+  if (norm > 1.0) norm = 1.0;
+
+  return pow(norm, 1.3);
+}
