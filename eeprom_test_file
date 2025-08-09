@@ -1,0 +1,17 @@
+// --- EEPROM Final Hardware Test ---
+// This sketch attempts to force a write to the EEPROM.
+
+#include <EEPROM.h>
+
+const int EEPROM_ADDR = 0;
+const byte TEST_VALUE = 55; // A unique number to look for
+
+void setup() {
+  // Unconditionally write the test value to the EEPROM.
+  // This happens immediately on boot.
+  EEPROM.write(EEPROM_ADDR, TEST_VALUE); 
+}
+
+void loop() {
+  // Loop is empty.
+}
