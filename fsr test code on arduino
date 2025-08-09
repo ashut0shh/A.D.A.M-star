@@ -1,0 +1,93 @@
+const int FSR1_PIN = A0;
+const int FSR2_PIN = A1;
+const int NUM_SAMPLES = 20;
+const int MAX_ADC = 1023;
+
+float baseline1 = 0, baseline2 = 0;
+float maxSignal1 = 100.0, maxSignal2 = 100.0;
+       
+void setup() {
+  Serial.begin(115200);
+  Serial.println("STEP 1: Hold FSRs with NO grip...");
+  delay(3000);
+  baseline1 = calibrateFSR(FSR1_PIN);
+  baseline2 = calibrateFSR(FSR2_PIN);
+  Serial.println("Baselines calibrated.");
+  
+  Serial.println("STEP 2: Apply MAXIMUM grip in next 5 seconds...");
+  delay(5000);
+  maxSignal1 = calibrateMax(FSR1_PIN, baseline1);
+  maxSignal2 = calibrateMax(FSR2_PIN, baseline2);
+
+  // Avoid divide-by-zero
+  if (maxSignal1 < 20) maxSignal1 = 20;
+  if (maxSignal2 < 20) maxSignal2 = 20;
+
+  Serial.println("Max forces calibrated.");
+  Serial.print("Max Signal1: "); Serial.println(maxSignal1);
+  Serial.print("Max Signal2: "); Serial.println(maxSignal2);
+  Serial.println("Ready to detect grip...");
+}
+
+void loop() {
+  float raw1, raw2;
+  float norm1 = getNormalizedForce(FSR1_PIN, baseline1, maxSignal1, raw1);
+  float norm2 = getNormalizedForce(FSR2_PIN, baseline2, maxSignal2, raw2);
+  float avgNorm = (norm1 + norm2) / 3.0;
+
+  String grip;
+  if (avgNorm < 0.1) grip = "No Grip";
+  else if (avgNorm < 0.6) grip = "Weak Grip";
+  else grip = "Strong Grip";
+
+  Serial.print("FSR1: "); Serial.print(raw1);
+  Serial.print(" | FSR2: "); Serial.print(raw2);
+  Serial.print(" | Norm1: "); Serial.print(norm1, 2);
+  Serial.print(" | Norm2: "); Serial.print(norm2, 2);
+  Serial.print(" | Avg: "); Serial.print(avgNorm, 2);
+  Serial.print(" | Grip: "); Serial.println(grip);
+
+  delay(300);
+}
+
+float calibrateFSR(int pin) {
+  long sum = 0;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(10);
+  }
+  return MAX_ADC - (sum / float(NUM_SAMPLES));
+}
+
+float calibrateMax(int pin, float baseline) {
+  float maxSignal = 0;
+  for (int i = 0; i < 100; i++) {
+    int reading = analogRead(pin);
+    float inverted = MAX_ADC - reading;
+    float signal = inverted - baseline;
+    if (signal > maxSignal) maxSignal = signal;
+    delay(50);  // 5 seconds total
+  }
+  return maxSignal;
+}
+
+float getNormalizedForce(int pin, float baseline, float maxSignal, float& outRawInverted) {
+  long sum = 0;
+  for (int i = 0; i < NUM_SAMPLES; i++) {
+    sum += analogRead(pin);
+    delay(5);
+  }
+
+  float avg = sum / float(NUM_SAMPLES);
+  float inverted = MAX_ADC - avg;
+  float signal = inverted - baseline;
+  if (signal < 0) signal = 0;
+
+  outRawInverted = signal;
+
+  float norm = signal / maxSignal;
+  if (norm > 1.0) norm = 1.0;
+
+  // Optional smoothing curve
+  return pow(norm, 1.3);
+}
