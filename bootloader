@@ -1,0 +1,8 @@
+-> sketch->examples->arduinoisp->upload the code to uno
+download attiny library from board manager 
+-> tools -> attiny25/45/85
+            port("your com port")
+            internal 8 Mhz clock
+            processor: attiny85
+            programmer: arduino as isp    // not any other version it will crash
+            burn bootloader
