@@ -1,0 +1,41 @@
+#include <EEPROM.h>
+
+const int analogPin1 = A1;  // First analog pin
+const int analogPin2 = A2;  // Second analog pin
+const int changeThreshold = 2;  // Only log if value changes enough
+
+int lastValue1 = 0;
+int lastValue2 = 0;
+int eepromAddress = 0;
+
+void setup() {
+  lastValue1 = EEPROM.read(0) << 2;
+  lastValue2 = EEPROM.read(1) << 2;
+}
+
+void loop() {
+  int sensorValue1 = analogRead(analogPin1);
+  int sensorValue2 = analogRead(analogPin2);
+
+  bool changed = false;
+
+  if (abs(sensorValue1 - lastValue1) >= changeThreshold) {
+    EEPROM.write(eepromAddress, sensorValue1 >> 2);
+    lastValue1 = sensorValue1;
+    eepromAddress++;
+    changed = true;
+  }
+
+  if (abs(sensorValue2 - lastValue2) >= changeThreshold) {
+    EEPROM.write(eepromAddress, sensorValue2 >> 2);
+    lastValue2 = sensorValue2;
+    eepromAddress++;
+    changed = true;
+  }
+
+  if (eepromAddress >= EEPROM.length()) {
+    eepromAddress = 0; // Wrap around
+  }
+
+  delay(100);
+}
