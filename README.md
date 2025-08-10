@@ -6,7 +6,7 @@ a test for alziemer's and dementia using praxia
 1.download the arduino ide
 2.upload arduino isp's code from examples->arduinoisp
 3.make the pinout as shown in the pinout file
-4.burn bootloader (if you upload any new code to uno i.e. not attiny then run isp again)
+4.burn bootloader (if you upload any new code to uno i.e. not attiny then run isp again) 
 5.run the test codes to make sure the individual components are working properly
 6.run the final code 
 7.locate avrdude in your arduino folder
