@@ -1,7 +1,7 @@
 # A.D.A.M-star
 a test for alziemer's and dementia using praxia
 
-
+ 
 
 1.download the arduino ide
 2.upload arduino isp's code from examples->arduinoisp
