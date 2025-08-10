@@ -1,0 +1,21 @@
+attiny:
+pin1-uno pin 10
+pin2- 
+pin3 -fsr1's output
+pin4-gnd
+pin5-uno pin 11
+pin6- uno pin 12
+pin7- uno pin 13 and fsr2's output (connect them in series)
+pin8- uno vcc (5v)
+
+connect a 0.1uf - 10uf capacitor to vcc and gnd
+
+
+FSR connections:
+vcc(5v)-----10k resistor-----output jumper-----fsr-----gnd
+                                |
+                                |
+                                |
+                                |
+                                |
+                        attiny pin 3 or pin 7
