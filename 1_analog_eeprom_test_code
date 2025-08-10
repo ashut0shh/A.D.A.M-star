@@ -1,0 +1,31 @@
+#include <EEPROM.h>
+
+const int analogPin = A1;        // Physical pin 7 on ATtiny85
+const int changeThreshold = 2;   // Min ADC change before logging
+
+int lastValue = 0;
+int eepromAddress = 0;           // Current EEPROM write address
+
+void setup() {
+  // Load last stored address (optional, here we just start at 0)
+  lastValue = analogRead(analogPin);
+}
+
+void loop() {
+  int sensorValue = analogRead(analogPin);
+
+  // Only log if reading changed enough
+  if (abs(sensorValue - lastValue) >= changeThreshold) {
+    byte eepromValue = sensorValue >> 2; // 10-bit → 8-bit
+    EEPROM.write(eepromAddress, eepromValue);
+
+    eepromAddress++;
+    if (eepromAddress >= EEPROM.length()) {
+      eepromAddress = 0; // Wrap around when full
+    }
+
+    lastValue = sensorValue;
+  }
+
+  delay(100); // Adjust for your sampling rate
+}
